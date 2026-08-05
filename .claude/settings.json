@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node debug-ticketmaster-ui.js)",
+      "Bash(curl -s \"http://localhost:3000/api/ticketmaster/search?keyword=Metallica\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(r['artist'],'|',r['date'],'|',r.get\\('venue'\\)\\) for r in d['results'][:5]]\")",
+      "Bash(node test-photo-feature.js)",
+      "Bash(doppler run *)",
+      "Bash(node test-artist-flow.js)",
+      "Bash(curl -s \"http://localhost:3000/api/ticketmaster/attractions?keyword=Metallica\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s \"http://localhost:3000/api/ticketmaster/attractions?keyword=Metallica\" -o /tmp/attractions.json)",
+      "Bash(node -e \"const d=require\\('/tmp/attractions.json'\\); console.log\\(d.results[0]\\)\")",
+      "Bash(node test-nearby.js)",
+      "Bash(curl -sf http://localhost:3000)",
+      "Bash(node test-home-nearby.js)",
+      "Bash(node test-home-loggedin.js)",
+      "WebFetch(domain:developer.spotify.com)",
+      "Bash(tail -30 /tmp/dev-server.log)",
+      "Read(//tmp/**)",
+      "Bash(curl -sI \"http://localhost:3000/api/spotify/login\")",
+      "Bash(tail -15 /tmp/dev-server.log)",
+      "Bash(node debug-127-signup.js)",
+      "Bash(node test-login-127.js)",
+      "Bash(doppler run -- node -e ' *)",
+      "Bash(netstat -ano)",
+      "Bash(node test-favorite-wishlist.js)",
+      "PowerShell(doppler run -- npm run build 2>&1)",
+      "Read(//c/Users/Jcruz/AppData/Local/Temp/claude/c--Users-Jcruz-VS-Code-UsList/07f6ae3a-2d71-47d2-987d-0de7fd215b7e/scratchpad/**)",
+      "Bash(node test-concert-detail.js)"
+    ]
+  }
+}
