@@ -13,16 +13,73 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
+  // A recovery-link session only reaches aal1 — accounts with 2FA enrolled
+  // must clear an MFA challenge before Supabase allows updateUser({password}).
+  const [needsMfa, setNeedsMfa] = useState(false);
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+
   useEffect(() => {
     async function prepareRecoverySession() {
-      const code = new URLSearchParams(window.location.search).get("code");
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code).catch(() => {});
+      const urlCode = new URLSearchParams(window.location.search).get("code");
+      if (urlCode) {
+        await supabase.auth.exchangeCodeForSession(urlCode).catch(() => {});
       }
+
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== aal.nextLevel) {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const factor = factors?.totp?.find((f) => f.status === "verified");
+
+        if (!factor) {
+          setError("Two-factor authentication is set up but no verified device was found — contact support.");
+          setReady(true);
+          return;
+        }
+
+        const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+          factorId: factor.id,
+        });
+
+        if (challengeError || !challenge) {
+          setError(challengeError?.message ?? "Couldn't start two-factor verification — try again.");
+          setReady(true);
+          return;
+        }
+
+        setFactorId(factor.id);
+        setChallengeId(challenge.id);
+        setNeedsMfa(true);
+      }
+
       setReady(true);
     }
     prepareRecoverySession();
   }, [supabase]);
+
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (!factorId || !challengeId || code.trim().length !== 6) return;
+
+    setLoading(true);
+    setError(null);
+
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId,
+      code: code.trim(),
+    });
+
+    setLoading(false);
+
+    if (verifyError) {
+      setError("That code didn't match — check your app and try again.");
+      return;
+    }
+
+    setNeedsMfa(false);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +104,38 @@ export default function ResetPasswordPage() {
   }
 
   if (!ready) return null;
+
+  if (needsMfa) {
+    return (
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-16">
+        <h1 className="mb-2 text-2xl font-semibold">Enter your code</h1>
+        <p className="mb-6 text-sm text-black/60 dark:text-white/60">
+          This account has two-factor authentication on — open your authenticator app and enter the current
+          6-digit code before setting a new password.
+        </p>
+        <form onSubmit={handleVerify} className="flex flex-col gap-4">
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            autoFocus
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            placeholder="123456"
+            className="rounded-md border border-black/10 px-3 py-2 text-center font-mono text-lg dark:border-white/20"
+          />
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading || code.length !== 6}
+            className="mt-2 rounded-md bg-foreground px-4 py-2 text-background disabled:opacity-50"
+          >
+            {loading ? "Verifying..." : "Verify"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-16">
