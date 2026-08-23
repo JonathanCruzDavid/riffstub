@@ -40,23 +40,22 @@ export default function ResetPasswordPage() {
         }
       }
 
-      const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aalError || !aal) {
+      // Deciding off listFactors() directly rather than
+      // getAuthenticatorAssuranceLevel()'s nextLevel — that computed
+      // comparison was reporting no step-up needed for recovery-link
+      // sessions even when the account has a verified factor, and the
+      // server rejects updateUser() over it regardless. Whether the
+      // account has 2FA at all is the real question here.
+      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+      if (factorsError) {
         setLinkInvalid(true);
         setReady(true);
         return;
       }
 
-      if (aal.nextLevel === "aal2" && aal.currentLevel !== aal.nextLevel) {
-        const { data: factors } = await supabase.auth.mfa.listFactors();
-        const factor = factors?.totp?.find((f) => f.status === "verified");
+      const factor = factors?.totp?.find((f) => f.status === "verified");
 
-        if (!factor) {
-          setError("Two-factor authentication is set up but no verified device was found — contact support.");
-          setReady(true);
-          return;
-        }
-
+      if (factor) {
         const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
           factorId: factor.id,
         });
