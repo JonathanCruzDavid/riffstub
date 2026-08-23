@@ -36,7 +36,7 @@ export default async function NavBar() {
           <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-sm shadow-sm shadow-blue-600/30">
             🎫
           </span>
-          Houselights
+          Riffstub
         </Link>
         <div className="flex items-center gap-5 text-sm">
           {user ? (

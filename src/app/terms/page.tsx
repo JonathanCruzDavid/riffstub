@@ -14,7 +14,7 @@ export default function TermsPage() {
             1. Acceptance of these terms
           </h2>
           <p>
-            By creating an account or using Houselights ("Houselights," "we," "us"),
+            By creating an account or using Riffstub ("Riffstub," "we," "us"),
             you agree to these Terms of Service and our{" "}
             <a href="/privacy" className="underline">
               Privacy Policy
@@ -25,24 +25,24 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-black dark:text-white">
-            2. What Houselights is
+            2. What Riffstub is
           </h2>
           <p>
-            Houselights is a personal tool for tracking concerts you're going to
+            Riffstub is a personal tool for tracking concerts you're going to
             and concerts you've been to, with some social features layered on
             top — following other users, a feed, and posting your own
             updates. It surfaces upcoming show listings from third-party
             ticketing platforms and, if you connect your Spotify account,
-            uses your listening data to personalize what you see. Houselights is
+            uses your listening data to personalize what you see. Riffstub is
             not a ticket seller — every ticket purchase happens on the
-            third-party site you're sent to, and Houselights is never involved
+            third-party site you're sent to, and Riffstub is never involved
             in that transaction.
           </p>
         </section>
 
         <section>
           <h2 className="mb-2 text-base font-semibold text-black dark:text-white">
-            3. Who can use Houselights
+            3. Who can use Riffstub
           </h2>
           <p>
             You must be at least 13 years old to create an account. By
@@ -60,7 +60,7 @@ export default function TermsPage() {
           <p className="mb-2">
             You keep ownership of everything you add — concert photos, notes,
             ratings, your bio, feed posts, and so on ("your content"). By
-            posting it, you give Houselights a limited license to store and
+            posting it, you give Riffstub a limited license to store and
             display it back to you, and to display it to other users where
             it's meant to be seen (your feed posts and activity to your
             followers; your public profile fields to anyone who looks up
@@ -134,7 +134,7 @@ export default function TermsPage() {
             7. Third-party data and services
           </h2>
           <p className="mb-2">
-            Houselights displays data from services it doesn't control, and isn't
+            Riffstub displays data from services it doesn't control, and isn't
             responsible for its accuracy:
           </p>
           <ul className="mb-2 list-disc pl-5">
@@ -146,15 +146,15 @@ export default function TermsPage() {
               seller's own site before you buy.
             </li>
             <li>
-              <strong>Spotify</strong> — if you connect your account, Houselights
+              <strong>Spotify</strong> — if you connect your account, Riffstub
               reads your top artists, followed artists, and lets you search
               tracks/artists, using Spotify's API under your authorization.
               You can disconnect Spotify at any time from your account
-              settings, which revokes Houselights' access.
+              settings, which revokes Riffstub' access.
             </li>
           </ul>
           <p>
-            Houselights is not affiliated with, endorsed by, or sponsored by
+            Riffstub is not affiliated with, endorsed by, or sponsored by
             Ticketmaster, SeatGeek, or Spotify. All trademarks, artist names,
             and images belong to their respective owners.
           </p>
@@ -181,10 +181,10 @@ export default function TermsPage() {
           </h2>
           <p className="mb-2">Please don't:</p>
           <ul className="list-disc pl-5">
-            <li>Scrape, bulk-download, or resell data from Houselights or the third-party APIs it uses</li>
+            <li>Scrape, bulk-download, or resell data from Riffstub or the third-party APIs it uses</li>
             <li>Try to bypass rate limits, security measures, or reverse-engineer the app</li>
             <li>Impersonate another person or misuse the public profile/username search</li>
-            <li>Use Houselights for anything illegal or to harass another user</li>
+            <li>Use Riffstub for anything illegal or to harass another user</li>
             <li>File false or bad-faith reports against another user's content or account</li>
           </ul>
         </section>
@@ -194,7 +194,7 @@ export default function TermsPage() {
             10. No warranty
           </h2>
           <p>
-            Houselights is provided "as is," without warranties of any kind. We
+            Riffstub is provided "as is," without warranties of any kind. We
             don't guarantee the app will be error-free, uninterrupted, or
             that event listings, dates, or prices shown are accurate or
             up to date. Use it at your own judgment, and double-check
@@ -208,7 +208,7 @@ export default function TermsPage() {
             11. Limitation of liability
           </h2>
           <p>
-            To the fullest extent permitted by law, Houselights and its operator
+            To the fullest extent permitted by law, Riffstub and its operator
             aren't liable for indirect, incidental, or consequential damages
             arising from your use of the app — including missed events,
             incorrect listings, or issues with a third-party ticket purchase.
@@ -231,8 +231,8 @@ export default function TermsPage() {
             13. Changes to these terms
           </h2>
           <p>
-            We may update these terms as Houselights changes. We'll update the
-            "Last updated" date above when we do. Continuing to use Houselights
+            We may update these terms as Riffstub changes. We'll update the
+            "Last updated" date above when we do. Continuing to use Riffstub
             after a change means you accept the updated terms.
           </p>
         </section>

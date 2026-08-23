@@ -5,11 +5,11 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
-      <h1 className="mb-6 text-2xl font-semibold">About Houselights</h1>
+      <h1 className="mb-6 text-2xl font-semibold">About Riffstub</h1>
 
       <div className="flex flex-col gap-4 text-sm leading-relaxed text-black/70 dark:text-white/70">
         <p>
-          Houselights is a personal concert tracker — one place to keep every show
+          Riffstub is a personal concert tracker — one place to keep every show
           you're going to, and a record of every one you've been to. Search
           for an artist, see their upcoming tour dates and where they rank
           against your Spotify listening, and log the shows you've already
@@ -31,7 +31,7 @@ export default function AboutPage() {
           who likes going to shows.
         </p>
         <p>
-          Houselights pulls upcoming show listings from{" "}
+          Riffstub pulls upcoming show listings from{" "}
           <a
             href="https://www.ticketmaster.com"
             target="_blank"
@@ -58,7 +58,7 @@ export default function AboutPage() {
           >
             Spotify
           </a>{" "}
-          when you choose to connect your account. Houselights isn't affiliated
+          when you choose to connect your account. Riffstub isn't affiliated
           with, endorsed by, or sponsored by any of them — see the{" "}
           <a href="/terms" className="underline">
             Terms

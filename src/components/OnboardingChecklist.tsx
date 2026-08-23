@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const DISMISS_KEY = "houselights:onboarding-dismissed";
+const DISMISS_KEY = "riffstub:onboarding-dismissed";
 
 type Item = {
   done: boolean;
@@ -59,7 +59,7 @@ export default function OnboardingChecklist({
       >
         ✕
       </button>
-      <p className="mb-3 pr-6 font-medium">Get the most out of Houselights</p>
+      <p className="mb-3 pr-6 font-medium">Get the most out of Riffstub</p>
       <ul className="flex flex-col gap-2">
         {items.map((item) => (
           <li key={item.label} className="flex items-center justify-between gap-3">

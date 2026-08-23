@@ -31,7 +31,7 @@ export function SocialCard() {
         >
           🎫
         </span>
-        <span>Houselights</span>
+        <span>Riffstub</span>
       </div>
       <div style={{ display: "flex", marginTop: 32, fontSize: 34, opacity: 0.9 }}>
         Every concert you&apos;re going to. One place.

@@ -11,8 +11,8 @@ export default function PrivacyPage() {
       <div className="flex flex-col gap-8 text-sm leading-relaxed text-black/70 dark:text-white/70">
         <section>
           <p>
-            This explains what Houselights collects, why, and what you can do
-            about it. Houselights is a small, independently-run app — your data is
+            This explains what Riffstub collects, why, and what you can do
+            about it. Riffstub is a small, independently-run app — your data is
             used to run the app for you, not sold or handed to advertisers.
           </p>
         </section>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
             <li>
               <strong>Two-factor authentication status</strong> — whether
               you've enabled it. The authenticator secret itself is managed
-              by Supabase, our authentication provider — Houselights' own code
+              by Supabase, our authentication provider — Riffstub' own code
               never sees or stores it.
             </li>
           </ul>
@@ -89,7 +89,7 @@ export default function PrivacyPage() {
             </li>
             <li>
               If connected, your Spotify data is fetched directly from
-              Spotify using your own authorization — Houselights doesn't share
+              Spotify using your own authorization — Riffstub doesn't share
               your Spotify data with anyone else.
             </li>
             <li>
@@ -169,7 +169,7 @@ export default function PrivacyPage() {
             Children's privacy
           </h2>
           <p>
-            Houselights isn't directed at children under 13, and we don't
+            Riffstub isn't directed at children under 13, and we don't
             knowingly collect data from anyone under 13.
           </p>
         </section>

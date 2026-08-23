@@ -17,24 +17,24 @@ const geistMono = Geist_Mono({
 const DESCRIPTION = "Keep track of every concert you're going to and every one you've been to.";
 
 export const metadata: Metadata = {
-  // TODO: set NEXT_PUBLIC_SITE_URL once Houselights has a real domain — used
+  // TODO: set NEXT_PUBLIC_SITE_URL once Riffstub has a real domain — used
   // to build absolute URLs for shared social preview images. Falls back to
   // localhost so nothing breaks in the meantime.
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Houselights — track your concerts",
-    template: "%s — Houselights",
+    default: "Riffstub — track your concerts",
+    template: "%s — Riffstub",
   },
   description: DESCRIPTION,
   openGraph: {
-    title: "Houselights",
+    title: "Riffstub",
     description: DESCRIPTION,
-    siteName: "Houselights",
+    siteName: "Riffstub",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Houselights",
+    title: "Riffstub",
     description: DESCRIPTION,
   },
 };

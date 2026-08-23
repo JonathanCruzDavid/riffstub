@@ -77,10 +77,10 @@ export async function POST(request: Request) {
 
   try {
     await transporter.sendMail({
-      from: `Houselights Contact <${gmailUser}>`,
+      from: `Riffstub Contact <${gmailUser}>`,
       to: gmailUser,
       replyTo: email,
-      subject: `[${safeReason}] Houselights contact from ${name}`,
+      subject: `[${safeReason}] Riffstub contact from ${name}`,
       text: `From: ${name} <${email}>\n\n${message}`,
     });
   } catch (err) {

@@ -9,7 +9,7 @@ export default function ContactPage() {
     <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
       <h1 className="mb-2 text-2xl font-semibold">Contact</h1>
       <p className="mb-8 text-sm text-black/60 dark:text-white/60">
-        Houselights is a one-person project, so a message here goes straight to the person who
+        Riffstub is a one-person project, so a message here goes straight to the person who
         builds it. Replies won't be instant, but every message gets read.
       </p>
 
