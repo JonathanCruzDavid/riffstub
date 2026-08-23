@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ResetPasswordPage() {
@@ -19,16 +20,34 @@ export default function ResetPasswordPage() {
   const [factorId, setFactorId] = useState<string | null>(null);
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [linkInvalid, setLinkInvalid] = useState(false);
 
   useEffect(() => {
     async function prepareRecoverySession() {
       const urlCode = new URLSearchParams(window.location.search).get("code");
+
+      // Recovery codes are single-use — a reload of this page after the
+      // first successful exchange (e.g. hitting refresh) will fail here,
+      // since the code was already consumed. Fail clearly instead of
+      // silently falling through to a confusing "Auth session missing"
+      // error later when updateUser() is called with no session.
       if (urlCode) {
-        await supabase.auth.exchangeCodeForSession(urlCode).catch(() => {});
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(urlCode);
+        if (exchangeError) {
+          setLinkInvalid(true);
+          setReady(true);
+          return;
+        }
       }
 
-      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== aal.nextLevel) {
+      const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aalError || !aal) {
+        setLinkInvalid(true);
+        setReady(true);
+        return;
+      }
+
+      if (aal.nextLevel === "aal2" && aal.currentLevel !== aal.nextLevel) {
         const { data: factors } = await supabase.auth.mfa.listFactors();
         const factor = factors?.totp?.find((f) => f.status === "verified");
 
@@ -104,6 +123,24 @@ export default function ResetPasswordPage() {
   }
 
   if (!ready) return null;
+
+  if (linkInvalid) {
+    return (
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-16">
+        <h1 className="mb-2 text-2xl font-semibold">This link expired</h1>
+        <p className="mb-6 text-sm text-black/60 dark:text-white/60">
+          Password reset links only work once and expire quickly. Request a new one and use it right away,
+          without refreshing the page first.
+        </p>
+        <Link
+          href="/forgot-password"
+          className="rounded-md bg-foreground px-4 py-2 text-center text-background"
+        >
+          Send a new link
+        </Link>
+      </div>
+    );
+  }
 
   if (needsMfa) {
     return (
