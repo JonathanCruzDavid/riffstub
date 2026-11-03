@@ -5,6 +5,7 @@ import LikedSongsList from "@/components/LikedSongsList";
 import LikedArtistsList from "@/components/LikedArtistsList";
 import FollowButton from "@/components/FollowButton";
 import ReportButton from "@/components/ReportButton";
+import BlockButton from "@/components/BlockButton";
 import type { FavoriteSong, LikedArtist, ProfilePreview } from "@/lib/types";
 
 export default async function PublicProfilePage({
@@ -40,6 +41,39 @@ export default async function PublicProfilePage({
       notFound();
     }
 
+    const displayName = preview.username ?? "?";
+
+    // RLS also hides profiles the viewer has blocked, so they land here —
+    // show a stub with an Unblock instead of the private-account prompt.
+    const { data: existingBlock } = await supabase
+      .from("blocks")
+      .select("blocked_id")
+      .eq("blocker_id", viewer.id)
+      .eq("blocked_id", preview.id)
+      .maybeSingle();
+
+    if (existingBlock) {
+      return (
+        <div className="flex-1">
+          <div className="mx-auto w-full max-w-4xl px-4 py-16 text-center">
+            <h1 className="text-xl font-semibold">{displayName}</h1>
+            <p className="mt-2 text-sm text-black/60 dark:text-white/60">
+              You blocked this account. They can&apos;t see your profile or follow you.
+            </p>
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <BlockButton
+                targetUserId={preview.id}
+                username={displayName}
+                initialIsBlocked
+                className="text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"
+              />
+              <ReportButton targetType="account" targetId={preview.id} />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     let hasPendingRequest = false;
     const { data: existingRequest } = await supabase
       .from("follow_requests")
@@ -48,8 +82,6 @@ export default async function PublicProfilePage({
       .eq("target_id", preview.id)
       .maybeSingle();
     hasPendingRequest = !!existingRequest;
-
-    const displayName = preview.username ?? "?";
 
     return (
       <div className="flex-1">
@@ -82,6 +114,7 @@ export default async function PublicProfilePage({
               targetId={preview.id}
               className="text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70"
             />
+            <BlockButton targetUserId={preview.id} username={displayName} initialIsBlocked={false} />
           </div>
         </div>
       </div>
@@ -189,6 +222,12 @@ export default async function PublicProfilePage({
                   <ReportButton
                     targetType="account"
                     targetId={profile.id}
+                    className="text-white/70 drop-shadow hover:text-white"
+                  />
+                  <BlockButton
+                    targetUserId={profile.id}
+                    username={displayName}
+                    initialIsBlocked={false}
                     className="text-white/70 drop-shadow hover:text-white"
                   />
                 </div>

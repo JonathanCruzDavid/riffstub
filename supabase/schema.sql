@@ -960,3 +960,366 @@ drop policy if exists "Users can delete their own liked artists" on liked_artist
 create policy "Users can delete their own liked artists"
   on liked_artists for delete
   using (auth.uid() = user_id);
+
+-- ─── Blocks ─────────────────────────────────────────────────────────────────
+-- A block is two-way in effect: neither side can see the other's profile,
+-- find them in search, or follow/request them. Only the blocker can see the
+-- row itself — the blocked user is never told, they just stop finding the
+-- account. Everything else (search, favorites, liked artists, feed) cascades
+-- from the profiles + follows policies below, since those tables already
+-- gate visibility on a visible profile row or an existing follows row.
+create table if not exists blocks (
+  blocker_id uuid not null references auth.users (id) on delete cascade,
+  blocked_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id),
+  constraint blocks_no_self_block check (blocker_id <> blocked_id)
+);
+
+create index if not exists blocks_blocked_id_idx on blocks (blocked_id);
+
+alter table blocks enable row level security;
+
+drop policy if exists "Users can view their own blocks" on blocks;
+create policy "Users can view their own blocks"
+  on blocks for select
+  using (auth.uid() = blocker_id);
+
+drop policy if exists "Users can block as themselves" on blocks;
+create policy "Users can block as themselves"
+  on blocks for insert
+  with check (auth.uid() = blocker_id);
+
+drop policy if exists "Users can unblock as themselves" on blocks;
+create policy "Users can unblock as themselves"
+  on blocks for delete
+  using (auth.uid() = blocker_id);
+
+-- Security definer so policies can check a block in either direction even
+-- though the blocked side has no read access to the blocker's rows.
+create or replace function public.is_blocked_between(a uuid, b uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select a is not null and b is not null and exists (
+    select 1 from blocks
+    where (blocker_id = a and blocked_id = b)
+       or (blocker_id = b and blocked_id = a)
+  );
+$$;
+
+-- Blocking severs every existing link both ways in the same transaction.
+-- Deleting the follow_requests rows also clears their notifications via the
+-- on_follow_request_deleted trigger above.
+create or replace function public.sever_on_block()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from follows
+  where (follower_id = new.blocker_id and followee_id = new.blocked_id)
+     or (follower_id = new.blocked_id and followee_id = new.blocker_id);
+
+  delete from follow_requests
+  where (requester_id = new.blocker_id and target_id = new.blocked_id)
+     or (requester_id = new.blocked_id and target_id = new.blocker_id);
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_block_created on blocks;
+create trigger on_block_created
+  after insert on blocks
+  for each row execute procedure public.sever_on_block();
+
+-- Profiles: same rule as before, plus hidden in either direction of a block.
+drop policy if exists "Profiles are viewable unless private" on profiles;
+create policy "Profiles are viewable unless private"
+  on profiles for select
+  using (
+    auth.uid() = id
+    or (
+      not public.is_blocked_between(auth.uid(), id)
+      and (
+        not is_private
+        or exists (
+          select 1 from follows
+          where follows.follower_id = auth.uid()
+          and follows.followee_id = profiles.id
+        )
+      )
+    )
+  );
+
+drop policy if exists "Users can follow as themselves" on follows;
+create policy "Users can follow as themselves"
+  on follows for insert
+  with check (
+    auth.uid() = follower_id
+    and exists (select 1 from profiles p where p.id = followee_id and not p.is_private)
+    and not public.is_blocked_between(follower_id, followee_id)
+  );
+
+drop policy if exists "Users can create their own follow requests" on follow_requests;
+create policy "Users can create their own follow requests"
+  on follow_requests for insert
+  with check (
+    auth.uid() = requester_id
+    and not public.is_blocked_between(requester_id, target_id)
+  );
+
+-- The preview still resolves for the blocker (so they can land on the
+-- profile and unblock), but not for someone the account has blocked.
+create or replace function public.get_profile_preview(lookup_username text)
+returns table (id uuid, username text, avatar_url text, is_private boolean)
+language sql
+security definer
+set search_path = public
+as $$
+  select p.id, p.username, p.avatar_url, p.is_private
+  from profiles p
+  where p.username = lookup_username
+    and not exists (
+      select 1 from blocks b
+      where b.blocker_id = p.id and b.blocked_id = auth.uid()
+    );
+$$;
+
+grant execute on function public.get_profile_preview(text) to authenticated;
+
+-- Blocked profiles are hidden from the blocker by RLS too, so the
+-- "Blocked accounts" list in settings needs this to show who's on it.
+create or replace function public.get_blocked_accounts()
+returns table (id uuid, username text, avatar_url text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select p.id, p.username, p.avatar_url
+  from blocks b
+  join profiles p on p.id = b.blocked_id
+  where b.blocker_id = auth.uid()
+  order by b.created_at desc;
+$$;
+
+grant execute on function public.get_blocked_accounts() to authenticated;
+
+-- ─── Account deletion ───────────────────────────────────────────────────────
+-- Self-serve "delete my account". Every user-owned table references
+-- auth.users with on delete cascade, so removing that one row removes the
+-- profile, concerts, photos metadata, follows, posts, blocks, etc. Storage
+-- files don't cascade — the client removes those first through the Storage
+-- API (Supabase doesn't allow deleting storage.objects rows directly).
+-- Accounts with 2FA must be on a verified (aal2) session, so a stolen
+-- password-only session can't wipe the account.
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not signed in';
+  end if;
+
+  if exists (
+    select 1 from auth.mfa_factors
+    where user_id = auth.uid() and status = 'verified'
+  ) and coalesce(auth.jwt() ->> 'aal', 'aal1') <> 'aal2' then
+    raise exception 'Two-factor verification required';
+  end if;
+
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke execute on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;
+
+-- ─── Bans ───────────────────────────────────────────────────────────────────
+-- An admin ban does three things in one transaction: sets Supabase Auth's
+-- own banned_until (blocks sign-in and token refresh), deletes the user's
+-- sessions (kicks them out — an already-issued access token can live until
+-- it expires, ~1h by default), and stamps profiles.banned_at, which the
+-- policies below use to hide the account and its content from everyone
+-- except admins. Unbanning reverses all of it; nothing is deleted, so a
+-- mistaken ban is fully recoverable.
+alter table profiles add column if not exists banned_at timestamptz;
+
+-- Same protection as is_admin: a client session can never change banned_at
+-- (so a banned user can't clear it on their own row). Checked by role rather
+-- than auth.uid() because admin_set_ban() below runs as its owner, not as
+-- 'authenticated', and is the one path allowed to change it.
+create or replace function public.prevent_client_admin_changes()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.is_admin is distinct from old.is_admin and auth.uid() is not null then
+    new.is_admin := old.is_admin;
+  end if;
+  if new.banned_at is distinct from old.banned_at and current_user in ('authenticated', 'anon') then
+    new.banned_at := old.banned_at;
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.is_banned_user(p_user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (select 1 from profiles where id = p_user_id and banned_at is not null);
+$$;
+
+create or replace function public.admin_set_ban(p_user_id uuid, p_banned boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin_verified() then
+    raise exception 'Not authorized';
+  end if;
+  if p_user_id = auth.uid() then
+    raise exception 'You can''t ban your own account';
+  end if;
+  if exists (select 1 from profiles where id = p_user_id and is_admin) then
+    raise exception 'Admins can''t be banned — remove admin first';
+  end if;
+
+  update auth.users
+  set banned_until = case when p_banned then now() + interval '100 years' else null end
+  where id = p_user_id;
+
+  if p_banned then
+    -- Refresh tokens cascade from sessions, so this signs them out everywhere.
+    delete from auth.sessions where user_id = p_user_id;
+  end if;
+
+  update profiles
+  set banned_at = case when p_banned then now() else null end
+  where id = p_user_id;
+end;
+$$;
+
+revoke execute on function public.admin_set_ban(uuid, boolean) from public, anon;
+grant execute on function public.admin_set_ban(uuid, boolean) to authenticated;
+
+-- Banned accounts drop out of the minimal lookup too, so they can't be found
+-- and sent a follow request.
+create or replace function public.get_profile_preview(lookup_username text)
+returns table (id uuid, username text, avatar_url text, is_private boolean)
+language sql
+security definer
+set search_path = public
+as $$
+  select p.id, p.username, p.avatar_url, p.is_private
+  from profiles p
+  where p.username = lookup_username
+    and p.banned_at is null
+    and not exists (
+      select 1 from blocks b
+      where b.blocker_id = p.id and b.blocked_id = auth.uid()
+    );
+$$;
+
+-- Visibility: re-declared with a "not banned" condition on the non-owner
+-- branches. Owners still see their own rows; admins see everything through
+-- their separate policies.
+drop policy if exists "Profiles are viewable unless private" on profiles;
+create policy "Profiles are viewable unless private"
+  on profiles for select
+  using (
+    auth.uid() = id
+    or (
+      banned_at is null
+      and not public.is_blocked_between(auth.uid(), id)
+      and (
+        not is_private
+        or exists (
+          select 1 from follows
+          where follows.follower_id = auth.uid()
+          and follows.followee_id = profiles.id
+        )
+      )
+    )
+  );
+
+drop policy if exists "Feed posts are viewable by the author or their followers" on feed_posts;
+create policy "Feed posts are viewable by the author or their followers"
+  on feed_posts for select
+  using (
+    auth.uid() = user_id
+    or (
+      not public.is_banned_user(user_id)
+      and exists (
+        select 1 from follows
+        where follows.follower_id = auth.uid()
+        and follows.followee_id = feed_posts.user_id
+      )
+    )
+  );
+
+drop policy if exists "Activity events are viewable by the user or their followers" on activity_events;
+create policy "Activity events are viewable by the user or their followers"
+  on activity_events for select
+  using (
+    auth.uid() = user_id
+    or (
+      not public.is_banned_user(user_id)
+      and exists (
+        select 1 from follows
+        where follows.follower_id = auth.uid()
+        and follows.followee_id = activity_events.user_id
+      )
+    )
+  );
+
+drop policy if exists "Favorite songs are viewable unless owner is private" on favorite_songs;
+create policy "Favorite songs are viewable unless owner is private"
+  on favorite_songs for select
+  using (
+    auth.uid() = user_id
+    or (
+      not public.is_banned_user(user_id)
+      and (
+        exists (select 1 from profiles p where p.id = favorite_songs.user_id and not p.is_private)
+        or exists (
+          select 1 from follows
+          where follows.follower_id = auth.uid()
+          and follows.followee_id = favorite_songs.user_id
+        )
+      )
+    )
+  );
+
+drop policy if exists "Liked artists are viewable unless owner is private" on liked_artists;
+create policy "Liked artists are viewable unless owner is private"
+  on liked_artists for select
+  using (
+    auth.uid() = user_id
+    or (
+      not public.is_banned_user(user_id)
+      and (
+        exists (select 1 from profiles p where p.id = liked_artists.user_id and not p.is_private)
+        or exists (
+          select 1 from follows
+          where follows.follower_id = auth.uid()
+          and follows.followee_id = liked_artists.user_id
+        )
+      )
+    )
+  );

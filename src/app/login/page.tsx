@@ -43,7 +43,11 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError(error.message);
+      setError(
+        error.code === "user_banned"
+          ? "This account has been suspended for violating our Terms of Service. If you think this is a mistake, contact us."
+          : error.message,
+      );
       setLoading(false);
       return;
     }

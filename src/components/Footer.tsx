@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="border-t border-black/[.06] dark:border-white/[.08]">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-4 py-8 text-center text-xs text-black/50 dark:text-white/50 sm:flex-row sm:justify-between sm:text-left">
         <p>© {year} Riffstub. Not affiliated with Ticketmaster, SeatGeek, or Spotify.</p>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
           <Link href="/about" className="hover:text-black dark:hover:text-white">
             About
           </Link>
@@ -16,6 +16,9 @@ export default function Footer() {
           </Link>
           <Link href="/privacy" className="hover:text-black dark:hover:text-white">
             Privacy
+          </Link>
+          <Link href="/child-safety" className="hover:text-black dark:hover:text-white">
+            Child Safety
           </Link>
           <Link href="/contact" className="hover:text-black dark:hover:text-white">
             Contact

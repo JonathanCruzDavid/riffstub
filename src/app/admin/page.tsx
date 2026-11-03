@@ -50,8 +50,13 @@ export default async function AdminPage() {
     ...new Set(reportRows.filter((r) => r.target_type === "account").map((r) => r.target_id)),
   ];
 
-  const [{ data: reporterProfiles }, { data: reportedPosts }, { data: reportedAccounts }, { data: recentPosts }] =
-    await Promise.all([
+  const [
+    { data: reporterProfiles },
+    { data: reportedPosts },
+    { data: reportedAccounts },
+    { data: recentPosts },
+    { data: bannedAccounts },
+  ] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, username, avatar_url")
@@ -63,9 +68,14 @@ export default async function AdminPage() {
         .returns<FeedPost[]>(),
       supabase
         .from("profiles")
-        .select("id, username, avatar_url, is_private")
+        .select("id, username, avatar_url, is_private, banned_at")
         .in("id", accountTargetIds.length ? accountTargetIds : [EMPTY_ID]),
       supabase.from("feed_posts").select("*").order("created_at", { ascending: false }).limit(50).returns<FeedPost[]>(),
+      supabase
+        .from("profiles")
+        .select("id, username, avatar_url, banned_at")
+        .not("banned_at", "is", null)
+        .order("banned_at", { ascending: false }),
     ]);
 
   const postAuthorIds = [
@@ -73,7 +83,7 @@ export default async function AdminPage() {
   ];
   const { data: postAuthors } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url")
+    .select("id, username, avatar_url, banned_at")
     .in("id", postAuthorIds.length ? postAuthorIds : [EMPTY_ID]);
 
   return (
@@ -84,6 +94,8 @@ export default async function AdminPage() {
       reportedAccounts={reportedAccounts ?? []}
       postAuthors={postAuthors ?? []}
       recentPosts={recentPosts ?? []}
+      bannedAccounts={bannedAccounts ?? []}
+      currentUserId={user.id}
     />
   );
 }

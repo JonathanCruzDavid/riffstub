@@ -6,7 +6,7 @@ export default function PrivacyPage() {
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
       <h1 className="mb-2 text-2xl font-semibold">Privacy Policy</h1>
-      <p className="mb-8 text-sm text-black/50 dark:text-white/50">Last updated: July 31, 2026</p>
+      <p className="mb-8 text-sm text-black/50 dark:text-white/50">Last updated: November 3, 2026</p>
 
       <div className="flex flex-col gap-8 text-sm leading-relaxed text-black/70 dark:text-white/70">
         <section>
@@ -149,16 +149,20 @@ export default function PrivacyPage() {
             <li>Edit or remove your profile info, bio, and photos at any time.</li>
             <li>Make your account private, or switch back to public, at any time.</li>
             <li>Unfollow anyone, or remove one of your own followers.</li>
+            <li>
+              Block any account from its profile, and unblock it later from account settings. Blocking
+              removes follows both ways and hides your profile from them.
+            </li>
             <li>Delete a feed post you've written.</li>
             <li>Enable or disable two-factor authentication from account settings.</li>
             <li>Disconnect Spotify at any time from account settings.</li>
             <li>Delete individual concerts you've added.</li>
             <li>
-              Delete your account by{" "}
-              <a href="/contact" className="underline">
-                contacting us
-              </a>{" "}
-              — this removes your profile, concerts, photos, follows, feed
+              Delete your account at any time from account settings —{" "}
+              <a href="/delete-account" className="underline">
+                see how
+              </a>
+              . This immediately removes your profile, concerts, photos, follows, feed
               posts, and connections.
             </li>
           </ul>

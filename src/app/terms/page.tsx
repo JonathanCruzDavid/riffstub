@@ -6,7 +6,7 @@ export default function TermsPage() {
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
       <h1 className="mb-2 text-2xl font-semibold">Terms of Service</h1>
-      <p className="mb-8 text-sm text-black/50 dark:text-white/50">Last updated: July 31, 2026</p>
+      <p className="mb-8 text-sm text-black/50 dark:text-white/50">Last updated: November 3, 2026</p>
 
       <div className="flex flex-col gap-8 text-sm leading-relaxed text-black/70 dark:text-white/70">
         <section>
@@ -112,20 +112,46 @@ export default function TermsPage() {
             6. Content rules and moderation
           </h2>
           <p className="mb-2">
-            Don't post anything illegal, hateful, harassing, or that targets
-            someone based on race, ethnicity, religion, gender, sexual
-            orientation, or disability. Feed posts, bios, and usernames are
-            checked by an automated filter that blocks severe slurs and hate
-            speech before they're posted — it's a narrow, best-effort filter,
-            not a guarantee that all violating content is caught.
+            These rules apply to everything you post or upload — feed posts,
+            photos, bios, usernames, and profile images. Don't post:
           </p>
-          <p>
+          <ul className="mb-2 list-disc pl-5">
+            <li>
+              Hate speech, or anything that attacks or demeans someone based
+              on race, ethnicity, national origin, religion, gender, gender
+              identity, sexual orientation, or disability
+            </li>
+            <li>Harassment, bullying, threats, or encouraging violence or self-harm</li>
+            <li>Nudity, sexually explicit content, or graphic violence</li>
+            <li>
+              Any content that sexualizes, exploits, or endangers minors — see
+              our{" "}
+              <a href="/child-safety" className="underline">
+                Child Safety Standards
+              </a>
+            </li>
+            <li>Illegal content or promotion of illegal activity</li>
+            <li>Spam, scams, or impersonating another person</li>
+            <li>Someone else's private information without their consent</li>
+          </ul>
+          <p className="mb-2">
+            Feed posts, bios, and usernames are also checked by an automated
+            filter that blocks severe slurs and hate speech before they're
+            posted — it's a narrow, best-effort filter, not a guarantee that
+            all violating content is caught.
+          </p>
+          <p className="mb-2">
             Any user can report a post or an account they think violates
             these terms. Reports are reviewed by an administrator, who can
-            remove violating posts or take other action on the account. If
-            you file a report, your identity and the reason you gave are
-            visible to the administrator reviewing it — not to the person
-            you reported.
+            remove violating content and suspend or permanently ban the
+            account. If you file a report, your identity and the reason you
+            gave are visible to the administrator reviewing it — not to the
+            person you reported.
+          </p>
+          <p>
+            You can also block any account from its profile. Blocking removes
+            follows in both directions and stops that account from seeing your
+            profile or following you. They aren't notified.
           </p>
         </section>
 
@@ -150,7 +176,7 @@ export default function TermsPage() {
               reads your top artists, followed artists, and lets you search
               tracks/artists, using Spotify's API under your authorization.
               You can disconnect Spotify at any time from your account
-              settings, which revokes Riffstub' access.
+              settings, which revokes Riffstub&apos;s access.
             </li>
           </ul>
           <p>
@@ -220,7 +246,11 @@ export default function TermsPage() {
             12. Account termination
           </h2>
           <p>
-            You can delete your account at any time. We may suspend or
+            You can delete your account at any time from account settings (
+            <a href="/delete-account" className="underline">
+              here&apos;s how
+            </a>
+            ). We may suspend or
             terminate accounts that violate these terms, including in
             response to a report.
           </p>

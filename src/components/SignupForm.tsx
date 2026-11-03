@@ -13,6 +13,7 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -27,6 +28,10 @@ export default function SignupForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!agreedToTerms) {
+      setError("Please agree to the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -45,7 +50,10 @@ export default function SignupForm() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { username } },
+      // Recorded on the auth user so there's a timestamp of when this
+      // account agreed to the terms (Play's UGC policy requires acceptance
+      // before anyone can post).
+      options: { data: { username, terms_accepted_at: new Date().toISOString() } },
     });
 
     if (error) {
@@ -122,7 +130,7 @@ export default function SignupForm() {
       <h1 className="mb-2 text-2xl font-semibold">Sign up</h1>
       {pendingArtist && pendingDate && (
         <p className="mb-4 text-sm text-black/60 dark:text-white/60">
-          Create an account and we'll add <strong>{pendingArtist}</strong> to your list.
+          Create an account and we&apos;ll add <strong>{pendingArtist}</strong> to your list.
         </p>
       )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -156,6 +164,26 @@ export default function SignupForm() {
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-md border border-black/10 px-3 py-2 dark:border-white/20"
           />
+        </label>
+        <label className="flex items-start gap-2 text-sm text-black/70 dark:text-white/70">
+          <input
+            type="checkbox"
+            required
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-0.5 h-4 w-4 flex-shrink-0"
+          />
+          <span>
+            I&apos;m at least 13 and agree to the{" "}
+            <Link href="/terms" target="_blank" className="underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" target="_blank" className="underline">
+              Privacy Policy
+            </Link>
+            , including the content rules.
+          </span>
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button

@@ -129,6 +129,12 @@ export type ProfilePreview = {
   is_private: boolean;
 };
 
+export type BlockedAccount = {
+  id: string;
+  username: string | null;
+  avatar_url: string | null;
+};
+
 export type ReportTargetType = "post" | "account";
 export type ReportStatus = "pending" | "resolved";
 

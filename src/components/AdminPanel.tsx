@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatDisplayDate } from "@/lib/format";
 import type { FeedPost, Report } from "@/lib/types";
 
-type MiniProfile = { id: string; username: string | null; avatar_url: string | null };
+type MiniProfile = { id: string; username: string | null; avatar_url: string | null; banned_at?: string | null };
 type MiniProfileWithPrivacy = MiniProfile & { is_private: boolean };
 
 export default function AdminPanel({
@@ -17,6 +17,8 @@ export default function AdminPanel({
   reportedAccounts,
   postAuthors,
   recentPosts,
+  bannedAccounts,
+  currentUserId,
 }: {
   reports: Report[];
   reporterProfiles: MiniProfile[];
@@ -24,10 +26,13 @@ export default function AdminPanel({
   reportedAccounts: MiniProfileWithPrivacy[];
   postAuthors: MiniProfile[];
   recentPosts: FeedPost[];
+  bannedAccounts: MiniProfile[];
+  currentUserId: string;
 }) {
   const router = useRouter();
   const supabase = createClient();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [banError, setBanError] = useState<string | null>(null);
 
   const reporterById = new Map(reporterProfiles.map((p) => [p.id, p]));
   const postById = new Map(reportedPosts.map((p) => [p.id, p]));
@@ -68,12 +73,64 @@ export default function AdminPanel({
     setBusyId(null);
   }
 
+  // Banning signs the user out everywhere, blocks login, and hides their
+  // profile and content from everyone but admins — see admin_set_ban() in
+  // schema.sql. Nothing is deleted, so Unban fully restores the account.
+  async function setBan(account: MiniProfile, banned: boolean, busyKey: string, reportId?: string) {
+    const name = account.username ?? "this account";
+    if (
+      banned &&
+      !window.confirm(`Ban ${name}? They'll be signed out, can't log back in, and their profile and posts are hidden.`)
+    ) {
+      return;
+    }
+
+    setBusyId(busyKey);
+    setBanError(null);
+    const { error } = await supabase.rpc("admin_set_ban", { p_user_id: account.id, p_banned: banned });
+    if (error) {
+      setBanError(`Couldn't ${banned ? "ban" : "unban"} ${name}: ${error.message}`);
+      setBusyId(null);
+      return;
+    }
+
+    if (reportId) {
+      await supabase
+        .from("reports")
+        .update({ status: "resolved", resolved_at: new Date().toISOString(), resolved_by: currentUserId })
+        .eq("id", reportId);
+    }
+    router.refresh();
+    setBusyId(null);
+  }
+
+  function banButton(account: MiniProfile | null | undefined, busyKey: string, label: string, reportId?: string) {
+    if (!account || account.id === currentUserId) return null;
+    if (account.banned_at) {
+      return <span className="self-center text-xs font-medium text-red-600">Banned</span>;
+    }
+    return (
+      <button
+        type="button"
+        disabled={busyId === busyKey}
+        onClick={() => setBan(account, true, busyKey, reportId)}
+        className="rounded-full bg-red-600 px-3 py-1 text-xs text-white transition hover:bg-red-700 disabled:opacity-50"
+      >
+        {label}
+      </button>
+    );
+  }
+
   const postReports = reports.filter((r) => r.target_type === "post");
   const accountReports = reports.filter((r) => r.target_type === "account");
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <h1 className="mb-6 text-2xl font-semibold">Admin</h1>
+
+      {banError && (
+        <p className="mb-6 rounded-md border border-red-300 p-3 text-sm text-red-600 dark:border-red-900">{banError}</p>
+      )}
 
       <section className="mb-10">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
@@ -121,6 +178,7 @@ export default function AdminPanel({
                         Delete post
                       </button>
                     )}
+                    {banButton(author, report.id, "Ban author", report.id)}
                     <button
                       type="button"
                       disabled={busy}
@@ -167,6 +225,7 @@ export default function AdminPanel({
                         View profile
                       </Link>
                     )}
+                    {banButton(account, report.id, "Ban account", report.id)}
                     <button
                       type="button"
                       disabled={busy}
@@ -176,6 +235,41 @@ export default function AdminPanel({
                       Dismiss
                     </button>
                   </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-black/50 dark:text-white/50">
+          Banned accounts ({bannedAccounts.length})
+        </h2>
+        {bannedAccounts.length === 0 ? (
+          <p className="text-sm text-black/60 dark:text-white/60">No banned accounts.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {bannedAccounts.map((account) => {
+              const busyKey = `unban:${account.id}`;
+              return (
+                <li key={account.id} className="card flex items-center gap-3 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm">{account.username ?? "unknown"}</p>
+                    {account.banned_at && (
+                      <p className="text-xs text-black/50 dark:text-white/50">
+                        Banned {formatDisplayDate(account.banned_at.slice(0, 10))}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busyId === busyKey}
+                    onClick={() => setBan(account, false, busyKey)}
+                    className="flex-shrink-0 rounded-full border border-black/10 px-3 py-1 text-xs transition hover:bg-black/5 disabled:opacity-50 dark:border-white/20 dark:hover:bg-white/10"
+                  >
+                    Unban
+                  </button>
                 </li>
               );
             })}
@@ -200,6 +294,7 @@ export default function AdminPanel({
                     <p className="text-xs text-black/50 dark:text-white/50">{author?.username ?? "unknown"}</p>
                     <p className="truncate text-sm">{post.body}</p>
                   </div>
+                  {banButton(author, `ban:${post.id}`, "Ban")}
                   <button
                     type="button"
                     disabled={busy}

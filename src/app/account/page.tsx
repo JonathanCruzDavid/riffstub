@@ -5,6 +5,9 @@ import BannerUpload from "@/components/BannerUpload";
 import UsernameForm from "@/components/UsernameForm";
 import PrivacyToggle from "@/components/PrivacyToggle";
 import TwoFactorSettings from "@/components/TwoFactorSettings";
+import BlockButton from "@/components/BlockButton";
+import DeleteAccountSection from "@/components/DeleteAccountSection";
+import type { BlockedAccount } from "@/lib/types";
 
 export default async function AccountSettingsPage() {
   const supabase = await createClient();
@@ -23,6 +26,9 @@ export default async function AccountSettingsPage() {
     .select("user_id")
     .eq("user_id", user!.id)
     .maybeSingle();
+
+  const { data: blockedData } = await supabase.rpc("get_blocked_accounts");
+  const blockedAccounts = (blockedData ?? []) as BlockedAccount[];
 
   return (
     <div className="mx-auto w-full max-w-lg flex-1 px-4 py-10">
@@ -78,8 +84,45 @@ export default async function AccountSettingsPage() {
       </div>
 
       <div className="mt-8 rounded-lg border border-black/10 p-4 dark:border-white/10">
+        <p className="mb-1 font-medium">Blocked accounts</p>
+        {blockedAccounts.length > 0 ? (
+          <ul className="mt-2 flex flex-col gap-2">
+            {blockedAccounts.map((account) => (
+              <li key={account.id} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  {account.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={account.avatar_url} alt="" className="h-7 w-7 flex-shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-black/5 text-xs dark:bg-white/5">
+                      {(account.username ?? "?").charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="truncate text-sm">{account.username ?? "Unnamed account"}</span>
+                </div>
+                <BlockButton
+                  targetUserId={account.id}
+                  username={account.username ?? "this account"}
+                  initialIsBlocked
+                  className="text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-black/60 dark:text-white/60">
+            You haven&apos;t blocked anyone. You can block an account from its profile.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-8 rounded-lg border border-black/10 p-4 dark:border-white/10">
         <p className="mb-2 font-medium">Password</p>
         <ChangePasswordForm email={user!.email!} />
+      </div>
+
+      <div className="mt-8 rounded-lg border border-red-200 p-4 dark:border-red-500/30">
+        <DeleteAccountSection />
       </div>
     </div>
   );
