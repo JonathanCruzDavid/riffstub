@@ -23,7 +23,21 @@
   }
 }
 
+/* While the phone tab bar (MobileTabBar) is showing: keep content clear of
+   it, and drop the website footer — its links live at the bottom of
+   Account Settings instead. 639px = just under Tailwind's sm breakpoint. */
+@media (max-width: 639px) {
+  body:has(#mobile-tab-bar) {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+  body:has(#mobile-tab-bar) > footer {
+    display: none;
+  }
+}
+
 body {
+  /* No grey/blue flash on tapped links and buttons — native apps don't have one. */
+  -webkit-tap-highlight-color: transparent;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;

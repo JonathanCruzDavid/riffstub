@@ -138,6 +138,10 @@ export default function SignupForm() {
           Username
           <input
             type="text"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -148,6 +152,7 @@ export default function SignupForm() {
           Email
           <input
             type="email"
+            autoComplete="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -158,6 +163,7 @@ export default function SignupForm() {
           Password
           <input
             type="password"
+            autoComplete="new-password"
             required
             minLength={6}
             value={password}

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -37,6 +37,22 @@ export const metadata: Metadata = {
     title: "Riffstub",
     description: DESCRIPTION,
   },
+};
+
+// Behave like an app rather than a web page, mainly for the Android app
+// (a Trusted Web Activity): no pinch/double-tap zoom, and the on-screen
+// keyboard shrinks the layout instead of sliding over the focused field.
+// Android's accessibility "force enable zoom" setting still overrides this.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  interactiveWidget: "resizes-content",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export default function RootLayout({

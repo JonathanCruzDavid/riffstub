@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
 import AvatarUpload from "@/components/AvatarUpload";
@@ -121,6 +122,37 @@ export default async function AccountSettingsPage() {
       <div className="mt-8 rounded-lg border border-black/10 p-4 dark:border-white/10">
         <p className="mb-2 font-medium">Password</p>
         <ChangePasswordForm email={user!.email!} />
+      </div>
+
+      {/* Phones only: the tab bar replaces the avatar menu and the footer is
+          hidden (see MobileTabBar), so their links and Log out live here. */}
+      <div className="mt-8 rounded-lg border border-black/10 sm:hidden dark:border-white/10">
+        <ul className="divide-y divide-black/10 text-sm dark:divide-white/10">
+          {[
+            ...(profile?.is_admin ? [{ href: "/admin", label: "Admin" }] : []),
+            { href: "/about", label: "About" },
+            { href: "/contact", label: "Contact & support" },
+            { href: "/terms", label: "Terms of Service" },
+            { href: "/privacy", label: "Privacy Policy" },
+            { href: "/child-safety", label: "Child Safety" },
+          ].map((item) => (
+            <li key={item.href}>
+              <Link href={item.href} className="flex items-center justify-between px-4 py-3">
+                {item.label}
+                <span aria-hidden className="text-black/30 dark:text-white/30">
+                  ›
+                </span>
+              </Link>
+            </li>
+          ))}
+          <li>
+            <form action="/auth/signout" method="post">
+              <button type="submit" className="w-full px-4 py-3 text-left font-medium text-red-600">
+                Log out
+              </button>
+            </form>
+          </li>
+        </ul>
       </div>
 
       <div className="mt-8 rounded-lg border border-red-200 p-4 dark:border-red-500/30">

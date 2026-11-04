@@ -26,7 +26,14 @@ const FEATURES = [
   },
 ];
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ error_code?: string }>;
+}) {
+  // Supabase sends failed email links (expired or already-used password
+  // reset / confirmation links) back to the Site URL with error_code set.
+  const { error_code: authErrorCode } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -38,6 +45,21 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col">
+      {authErrorCode && (
+        <div className="mx-auto mt-6 w-full max-w-md px-4">
+          <div className="rounded-md border border-red-300 p-4 text-sm dark:border-red-900">
+            <p className="font-medium text-red-600">That email link didn&apos;t work</p>
+            <p className="mt-1 text-black/60 dark:text-white/60">
+              {authErrorCode === "otp_expired"
+                ? "It has expired or was already used. Links only work once, and only the newest one you requested is valid."
+                : "Something went wrong verifying it."}{" "}
+              <Link href="/forgot-password" className="underline">
+                Send a new reset link
+              </Link>
+            </p>
+          </div>
+        </div>
+      )}
       <section className="relative overflow-hidden px-6 pb-20 pt-20 text-center">
         <div
           aria-hidden

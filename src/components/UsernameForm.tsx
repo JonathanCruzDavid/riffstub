@@ -55,6 +55,10 @@ export default function UsernameForm({ initialUsername }: { initialUsername: str
         Username
         <input
           type="text"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           required
           value={username}
           onChange={(e) => setUsername(e.target.value)}

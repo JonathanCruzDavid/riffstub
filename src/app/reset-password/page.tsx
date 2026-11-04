@@ -181,6 +181,7 @@ export default function ResetPasswordPage() {
           New password
           <input
             type="password"
+            autoComplete="new-password"
             required
             minLength={6}
             value={password}
@@ -192,6 +193,7 @@ export default function ResetPasswordPage() {
           Confirm new password
           <input
             type="password"
+            autoComplete="new-password"
             required
             minLength={6}
             value={confirmPassword}
