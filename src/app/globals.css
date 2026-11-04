@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Lets the browser draw native controls (select dropdown lists, date
+     pickers, scrollbars) in the matching theme — without it, <option>
+     lists render white-on-white in dark mode. */
+  color-scheme: light dark;
 }
 
 @theme inline {
