@@ -69,16 +69,18 @@ export default async function AccountSettingsPage() {
             </form>
           </div>
         ) : (
-          <div className="flex items-center justify-between">
+          // Spotify's Development Mode only lets allowlisted accounts finish
+          // the login flow, so a Connect button would fail for nearly
+          // everyone. Song/artist search uses the app's own token and is
+          // unaffected. Restore the link to /api/spotify/login once Spotify
+          // grants extended quota.
+          <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-black/60 dark:text-white/60">
               See which of your artists are playing near you.
             </p>
-            <a
-              href="/api/spotify/login"
-              className="rounded-md bg-foreground px-3 py-1.5 text-sm text-background"
-            >
-              Connect
-            </a>
+            <span className="flex-shrink-0 rounded-md border border-black/10 px-3 py-1.5 text-sm text-black/50 dark:border-white/20 dark:text-white/50">
+              Coming soon
+            </span>
           </div>
         )}
       </div>
