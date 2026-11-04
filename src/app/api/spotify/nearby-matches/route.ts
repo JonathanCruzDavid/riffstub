@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClientForRequest } from "@/lib/supabase/server";
 import { getSpotifyArtistData } from "@/lib/spotify";
 import { findNearbyShowsForArtist } from "@/lib/concerts";
 import { dedupeByDateAndVenue, type TicketmasterResult } from "@/lib/ticketmaster";
@@ -38,10 +38,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ spotifyConnected: false, results: [] });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await createClientForRequest(request);
 
   if (!user) {
     return NextResponse.json({ spotifyConnected: false, results: [] });
