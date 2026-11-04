@@ -7,9 +7,10 @@ import MobileTabBar from "@/components/MobileTabBar";
 
 export default async function NavBar() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Verified locally from the session JWT (see lib/supabase/middleware.ts),
+  // so rendering the nav doesn't cost its own round trip to Supabase Auth.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const user = claimsData?.claims ?? null;
 
   let username = user?.email ?? "";
   let avatarUrl: string | null = null;
@@ -19,7 +20,7 @@ export default async function NavBar() {
     const { data: profile } = await supabase
       .from("profiles")
       .select("username, avatar_url, is_admin")
-      .eq("id", user.id)
+      .eq("id", user.sub)
       .single();
 
     username = profile?.username ?? user.email ?? "";

@@ -25,9 +25,16 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() refreshes an expiring session like getUser() does, but
+  // verifies the JWT locally against the project's cached signing keys
+  // (ES256) instead of a round trip to Supabase Auth on every request.
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  let user: unknown = claimsData?.claims ?? null;
+  if (!user && claimsError) {
+    // Fall back to the network check rather than bouncing a signed-in
+    // user to /login if local verification ever fails (e.g. JWKS fetch).
+    user = (await supabase.auth.getUser()).data.user;
+  }
 
   const isAuthRoute =
     request.nextUrl.pathname.startsWith("/login") ||
@@ -39,6 +46,7 @@ export async function updateSession(request: NextRequest) {
   // gated.
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/feed") ||
     (request.nextUrl.pathname.startsWith("/concerts") &&
       !request.nextUrl.pathname.startsWith("/concerts/preview")) ||
     request.nextUrl.pathname.startsWith("/profile") ||
